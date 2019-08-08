@@ -6,7 +6,8 @@ namespace SingleInstance.ConsoleApp
     {
         private static void Main(string[] args)
         {
-            using (var singleInstance = new SingleInstanceManager("a78dd11e-aec3-4c68-aa5a-4410c51d45fd", TimeSpan.Zero))
+            const string appKey = "a78dd11e-aec3-4c68-aa5a-4410c51d45fd";
+            using (var singleInstance = new SingleInstanceManager(appKey, TimeSpan.Zero))
             {
                 singleInstance.OnNewInstance += SingleInstance_OnNewInstance;
                 if (singleInstance.FirstInstance)
@@ -15,6 +16,7 @@ namespace SingleInstance.ConsoleApp
                 }
                 else
                 {
+                    singleInstance.SendNofitication();
                     AppStopped();
                 }
             }

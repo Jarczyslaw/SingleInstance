@@ -24,6 +24,26 @@ namespace SingleInstance
 
         public bool FirstInstance { get; private set; }
 
+        public void Dispose()
+        {
+            Release();
+        }
+
+        public void Release()
+        {
+            if (FirstInstance)
+            {
+                mutex.ReleaseMutex();
+                server.ClientConnected -= Server_ClientConnected;
+                server.Stop();
+            }
+        }
+
+        public void SendNofitication()
+        {
+            StartClient();
+        }
+
         private bool Check(TimeSpan timeout)
         {
             mutex = new Mutex(true, appKey);
@@ -32,38 +52,26 @@ namespace SingleInstance
             {
                 StartServer();
             }
-            else
-            {
-                StartClient();
-            }
             return FirstInstance;
         }
 
-        public void Release()
+        private void Server_ClientConnected(NamedPipeConnection<object, object> connection)
         {
-            if (FirstInstance)
-            {
-                mutex.ReleaseMutex();
-            }
-            server?.Stop();
-        }
-
-        public void Dispose()
-        {
-            Release();
+            OnNewInstance?.Invoke();
         }
 
         private void StartClient()
         {
-            var sender = new NamedPipeClient<object>(appKey);
-            sender.Start();
-            sender.Stop();
+            var client = new NamedPipeClient<object>(appKey);
+            client.Start();
+            client.WaitForConnection();
+            client.Stop();
         }
 
         private void StartServer()
         {
             server = new NamedPipeServer<object>(appKey);
-            server.ClientConnected += (_) => OnNewInstance?.Invoke();
+            server.ClientConnected += Server_ClientConnected;
             server.Start();
         }
     }

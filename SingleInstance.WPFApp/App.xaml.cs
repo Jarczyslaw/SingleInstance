@@ -14,6 +14,7 @@ namespace SingleInstance.WPFApp
         {
             if (!SingleInstance.FirstInstance)
             {
+                SingleInstance.SendNofitication();
                 Shutdown();
             }
         }
